@@ -47,6 +47,18 @@ const photos = [
 
     directionDroite: 353.7,
     distanceDroite: 280
+},
+    {
+    fichier: "p005.png",
+
+    latitude: 51.034300,
+    longitude: 2.371776,
+
+    directionGauche: 153.3,
+    distanceGauche: 108,
+
+    directionDroite: 188.7,
+    distanceDroite: 105
 }
 
 ];
