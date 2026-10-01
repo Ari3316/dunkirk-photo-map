@@ -22,7 +22,7 @@ const photos = [
 
     directionDroite: 90.3,
     distanceDroite: 401
-}
+},
     {
         fichier: "p001.png",
 
