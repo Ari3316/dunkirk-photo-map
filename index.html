@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Dunkerque 1940 - Carte photographique</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+
+        /* ==================================================
+           POPUP PHOTO
+           ================================================== */
+
+        .photo-popup {
+            margin: 0;
+            padding: 0;
+        }
+
+
+        .photo-popup img {
+
+            display: block;
+
+            width: auto;
+            height: auto;
+
+            max-width: 60vw;
+            max-height: 65vh;
+
+            object-fit: contain;
+
+        }
+
+
+        /* Enlève les marges inutiles de Leaflet */
+
+        .leaflet-popup-content {
+
+            margin: 8px;
+
+            width: auto !important;
+
+        }
+
+
+        .leaflet-popup-content-wrapper {
+
+            padding: 0;
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div id="map"></div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script src="photos.js"></script>
+
+
+<script>
+
+
+// ========================================================
+// CARTE
+// ========================================================
+
+
+const map = L.map('map').setView(
+
+    [51.070716, 2.475711],
+
+    17
+
+);
+
+
+// ========================================================
+// FOND SATELLITE
+// ========================================================
+
+
+L.tileLayer(
+
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+
+    {
+
+        maxZoom: 19,
+
+        attribution: 'Imagery &copy; Esri'
+
+    }
+
+).addTo(map);
+
+
+// ========================================================
+// CALCUL D'UN POINT SELON UNE DIRECTION
+// ========================================================
+
+
+function destinationPoint(
+
+    lat,
+    lng,
+    bearing,
+    distance
+
+) {
+
+    const R = 6378137;
+
+
+    const bearingRad =
+
+        bearing * Math.PI / 180;
+
+
+    const latRad =
+
+        lat * Math.PI / 180;
+
+
+    const deltaLat =
+
+        (distance * Math.cos(bearingRad)) / R;
+
+
+    const deltaLng =
+
+        (distance * Math.sin(bearingRad)) /
+
+        (R * Math.cos(latRad));
+
+
+    return [
+
+        lat +
+
+        deltaLat * 180 / Math.PI,
+
+
+        lng +
+
+        deltaLng * 180 / Math.PI
+
+    ];
+
+}
+
+
+// ========================================================
+// CRÉATION AUTOMATIQUE DES PHOTOS
+// ========================================================
+
+
+photos.forEach(photo => {
+
+
+    // ====================================================
+    // CALCUL DU TRIANGLE
+    // ====================================================
+
+
+    const angleGauche =
+
+        photo.direction -
+
+        photo.champVision / 2;
+
+
+    const angleDroite =
+
+        photo.direction +
+
+        photo.champVision / 2;
+
+
+    const pointGauche =
+
+        destinationPoint(
+
+            photo.latitude,
+
+            photo.longitude,
+
+            angleGauche,
+
+            photo.longueur
+
+        );
+
+
+    const pointDroite =
+
+        destinationPoint(
+
+            photo.latitude,
+
+            photo.longitude,
+
+            angleDroite,
+
+            photo.longueur
+
+        );
+
+
+    // ====================================================
+    // TRIANGLE
+    // ====================================================
+
+
+    L.polygon(
+
+        [
+
+            [
+                photo.latitude,
+                photo.longitude
+            ],
+
+            pointGauche,
+
+            pointDroite
+
+        ],
+
+        {
+
+            color: '#ff0000',
+
+            weight: 2,
+
+            fillColor: '#ff0000',
+
+            fillOpacity: 0.20,
+
+            // Le triangle ne peut pas être cliqué
+
+            interactive: false
+
+        }
+
+    ).addTo(map);
+
+
+    // ====================================================
+    // POINT
+    // ====================================================
+
+
+    const point = L.circleMarker(
+
+        [
+
+            photo.latitude,
+
+            photo.longitude
+
+        ],
+
+        {
+
+            radius: 7,
+
+            color: '#ffffff',
+
+            weight: 2,
+
+            fillColor: '#ff0000',
+
+            fillOpacity: 1
+
+        }
+
+    ).addTo(map);
+
+
+    // ====================================================
+    // PHOTO
+    // ====================================================
+
+
+    const contenuPhoto = `
+
+        <div class="photo-popup">
+
+            <img
+                src="photos/${photo.fichier}"
+                alt=""
+            >
+
+        </div>
+
+    `;
+
+
+    // ====================================================
+    // POPUP RATTACHÉE AU POINT
+    // ====================================================
+
+
+    point.bindPopup(
+
+        contenuPhoto,
+
+        {
+
+            maxWidth: 1000,
+
+            minWidth: 100,
+
+            autoPan: true,
+
+            autoPanPadding: [30, 30],
+
+            closeButton: true,
+
+            className: 'photo-leaflet-popup'
+
+        }
+
+    );
+
+
+});
+
+
+// ========================================================
+// FIN
+// ========================================================
+
+
+</script>
+
+
+</body>
+
+</html>
