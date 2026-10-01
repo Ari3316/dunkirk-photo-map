@@ -19,6 +19,7 @@
             margin: 0;
             width: 100%;
             height: 100%;
+            font-family: Arial, sans-serif;
         }
 
         #map {
@@ -36,36 +37,164 @@
             padding: 0;
         }
 
-
         .photo-popup img {
-
             display: block;
-
             width: auto;
             height: auto;
-
             max-width: 60vw;
             max-height: 65vh;
-
             object-fit: contain;
-
         }
-
-
-        /* Enlève les marges inutiles de Leaflet */
 
         .leaflet-popup-content {
-
             margin: 8px;
-
             width: auto !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+        }
+
+
+        /* ==================================================
+           PANNEAU D'ÉDITION
+           ================================================== */
+
+        #editor {
+
+            position: absolute;
+
+            top: 15px;
+            right: 15px;
+
+            z-index: 1000;
+
+            width: 300px;
+
+            background: rgba(255,255,255,0.96);
+
+            border-radius: 8px;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.30);
+
+            padding: 14px;
+
+            display: none;
+
+        }
+
+        #editor h3 {
+            margin: 0 0 10px 0;
+        }
+
+        #editorInfo {
+
+            font-family: monospace;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+
+            white-space: pre-line;
+
+        }
+
+        #editorCode {
+
+            width: 100%;
+
+            height: 160px;
+
+            box-sizing: border-box;
+
+            margin-top: 10px;
+
+            font-family: monospace;
+
+            font-size: 12px;
+
+            resize: vertical;
+
+        }
+
+        #copyButton {
+
+            width: 100%;
+
+            margin-top: 8px;
+
+            padding: 8px;
+
+            cursor: pointer;
+
+        }
+
+        #closeEditor {
+
+            float: right;
+
+            cursor: pointer;
+
+            font-weight: bold;
 
         }
 
 
-        .leaflet-popup-content-wrapper {
+        /* ==================================================
+           POIGNÉES D'ÉDITION
+           ================================================== */
 
-            padding: 0;
+        .edit-handle {
+
+            background: #ffffff;
+
+            border: 3px solid #0066ff;
+
+            border-radius: 50%;
+
+            width: 14px;
+
+            height: 14px;
+
+        }
+
+        .camera-handle {
+
+            background: #ff0000;
+
+            border: 3px solid #ffffff;
+
+            border-radius: 50%;
+
+            width: 16px;
+
+            height: 16px;
+
+        }
+
+
+        /* ==================================================
+           PETITE AIDE
+           ================================================== */
+
+        #help {
+
+            position: absolute;
+
+            bottom: 20px;
+            left: 20px;
+
+            z-index: 1000;
+
+            background: rgba(255,255,255,0.92);
+
+            padding: 8px 12px;
+
+            border-radius: 6px;
+
+            font-size: 13px;
+
+            box-shadow: 0 1px 6px rgba(0,0,0,0.25);
 
         }
 
@@ -78,6 +207,28 @@
 
 
 <div id="map"></div>
+
+
+<div id="editor">
+
+    <span id="closeEditor">✕</span>
+
+    <h3 id="editorTitle">Édition</h3>
+
+    <div id="editorInfo"></div>
+
+    <textarea id="editorCode" readonly></textarea>
+
+    <button id="copyButton">
+        Copier le code
+    </button>
+
+</div>
+
+
+<div id="help">
+    Double-clique sur un point rouge pour modifier son triangle.
+</div>
 
 
 <script
@@ -96,7 +247,11 @@
 // ========================================================
 
 
-const map = L.map('map').setView(
+const map = L.map('map', {
+
+    doubleClickZoom: false
+
+}).setView(
 
     [51.070716, 2.475711],
 
@@ -126,7 +281,42 @@ L.tileLayer(
 
 
 // ========================================================
-// CALCUL D'UN POINT SELON UNE DIRECTION
+// VARIABLES D'ÉDITION
+// ========================================================
+
+
+let edition = null;
+
+
+// ========================================================
+// ICÔNES DES POIGNÉES
+// ========================================================
+
+
+const editIcon = L.divIcon({
+
+    className: 'edit-handle',
+
+    iconSize: [14, 14],
+
+    iconAnchor: [7, 7]
+
+});
+
+
+const cameraIcon = L.divIcon({
+
+    className: 'camera-handle',
+
+    iconSize: [16, 16],
+
+    iconAnchor: [8, 8]
+
+});
+
+
+// ========================================================
+// CALCUL D'UN POINT SELON DIRECTION + DISTANCE
 // ========================================================
 
 
@@ -141,38 +331,26 @@ function destinationPoint(
 
     const R = 6378137;
 
-
     const bearingRad =
-
         bearing * Math.PI / 180;
 
-
     const latRad =
-
         lat * Math.PI / 180;
 
-
     const deltaLat =
-
         (distance * Math.cos(bearingRad)) / R;
 
-
     const deltaLng =
-
         (distance * Math.sin(bearingRad)) /
-
         (R * Math.cos(latRad));
 
 
     return [
 
         lat +
-
         deltaLat * 180 / Math.PI,
 
-
         lng +
-
         deltaLng * 180 / Math.PI
 
     ];
@@ -181,34 +359,102 @@ function destinationPoint(
 
 
 // ========================================================
-// CRÉATION AUTOMATIQUE DES PHOTOS
+// DISTANCE ENTRE DEUX POINTS
 // ========================================================
 
 
-photos.forEach(photo => {
+function distanceEntre(a, b) {
+
+    return map.distance(a, b);
+
+}
 
 
-    // ====================================================
-    // CALCUL DU TRIANGLE
-    // ====================================================
+// ========================================================
+// AZIMUT ENTRE DEUX POINTS
+// ========================================================
+
+
+function azimut(a, b) {
+
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+
+    const dLng =
+        (b.lng - a.lng) * Math.PI / 180;
+
+
+    const y =
+        Math.sin(dLng) * Math.cos(lat2);
+
+
+    const x =
+        Math.cos(lat1) * Math.sin(lat2) -
+
+        Math.sin(lat1) *
+        Math.cos(lat2) *
+        Math.cos(dLng);
+
+
+    let angle =
+        Math.atan2(y, x) * 180 / Math.PI;
+
+
+    angle =
+        (angle + 360) % 360;
+
+
+    return angle;
+
+}
+
+
+// ========================================================
+// DIFFÉRENCE ENTRE DEUX ANGLES
+// ========================================================
+
+
+function differenceAngles(a, b) {
+
+    let diff =
+        Math.abs(a - b);
+
+    if (diff > 180) {
+
+        diff =
+            360 - diff;
+
+    }
+
+    return diff;
+
+}
+
+
+// ========================================================
+// CRÉATION DES PHOTOS
+// ========================================================
+
+
+photos.forEach((photo, index) => {
+
+
+    // ----------------------------------------------------
+    // CALCUL DU TRIANGLE INITIAL
+    // ----------------------------------------------------
 
 
     const angleGauche =
-
         photo.direction -
-
         photo.champVision / 2;
 
 
     const angleDroite =
-
         photo.direction +
-
         photo.champVision / 2;
 
 
     const pointGauche =
-
         destinationPoint(
 
             photo.latitude,
@@ -223,7 +469,6 @@ photos.forEach(photo => {
 
 
     const pointDroite =
-
         destinationPoint(
 
             photo.latitude,
@@ -237,12 +482,12 @@ photos.forEach(photo => {
         );
 
 
-    // ====================================================
+    // ----------------------------------------------------
     // TRIANGLE
-    // ====================================================
+    // ----------------------------------------------------
 
 
-    L.polygon(
+    const triangle = L.polygon(
 
         [
 
@@ -267,8 +512,6 @@ photos.forEach(photo => {
 
             fillOpacity: 0.20,
 
-            // Le triangle ne peut pas être cliqué
-
             interactive: false
 
         }
@@ -276,9 +519,9 @@ photos.forEach(photo => {
     ).addTo(map);
 
 
-    // ====================================================
-    // POINT
-    // ====================================================
+    // ----------------------------------------------------
+    // POINT PHOTO
+    // ----------------------------------------------------
 
 
     const point = L.circleMarker(
@@ -308,9 +551,9 @@ photos.forEach(photo => {
     ).addTo(map);
 
 
-    // ====================================================
-    // PHOTO
-    // ====================================================
+    // ----------------------------------------------------
+    // POPUP PHOTO
+    // ----------------------------------------------------
 
 
     const contenuPhoto = `
@@ -327,11 +570,6 @@ photos.forEach(photo => {
     `;
 
 
-    // ====================================================
-    // POPUP RATTACHÉE AU POINT
-    // ====================================================
-
-
     point.bindPopup(
 
         contenuPhoto,
@@ -344,7 +582,7 @@ photos.forEach(photo => {
 
             autoPan: true,
 
-            autoPanPadding: [30, 30],
+            autoPanPadding: [30,30],
 
             closeButton: true,
 
@@ -355,7 +593,497 @@ photos.forEach(photo => {
     );
 
 
+    // ----------------------------------------------------
+    // DOUBLE CLIC = ÉDITION
+    // ----------------------------------------------------
+
+
+    point.on('dblclick', function(e) {
+
+        L.DomEvent.stopPropagation(e);
+
+        ouvrirEdition(
+
+            photo,
+
+            index,
+
+            point,
+
+            triangle
+
+        );
+
+    });
+
+
 });
+
+
+// ========================================================
+// OUVRIR LE MODE ÉDITION
+// ========================================================
+
+
+function ouvrirEdition(
+
+    photo,
+
+    index,
+
+    point,
+
+    triangle
+
+) {
+
+
+    fermerEdition();
+
+
+    point.closePopup();
+
+
+    const cameraLatLng =
+        point.getLatLng();
+
+
+    const angleGauche =
+        photo.direction -
+        photo.champVision / 2;
+
+
+    const angleDroite =
+        photo.direction +
+        photo.champVision / 2;
+
+
+    const gaucheLatLng =
+        L.latLng(
+
+            destinationPoint(
+
+                cameraLatLng.lat,
+
+                cameraLatLng.lng,
+
+                angleGauche,
+
+                photo.longueur
+
+            )
+
+        );
+
+
+    const droiteLatLng =
+        L.latLng(
+
+            destinationPoint(
+
+                cameraLatLng.lat,
+
+                cameraLatLng.lng,
+
+                angleDroite,
+
+                photo.longueur
+
+            )
+
+        );
+
+
+    // ----------------------------------------------------
+    // POIGNÉE APPAREIL PHOTO
+    // ----------------------------------------------------
+
+
+    const cameraHandle =
+        L.marker(
+
+            cameraLatLng,
+
+            {
+
+                draggable: true,
+
+                icon: cameraIcon
+
+            }
+
+        ).addTo(map);
+
+
+    // ----------------------------------------------------
+    // POIGNÉE GAUCHE
+    // ----------------------------------------------------
+
+
+    const gaucheHandle =
+        L.marker(
+
+            gaucheLatLng,
+
+            {
+
+                draggable: true,
+
+                icon: editIcon
+
+            }
+
+        ).addTo(map);
+
+
+    // ----------------------------------------------------
+    // POIGNÉE DROITE
+    // ----------------------------------------------------
+
+
+    const droiteHandle =
+        L.marker(
+
+            droiteLatLng,
+
+            {
+
+                draggable: true,
+
+                icon: editIcon
+
+            }
+
+        ).addTo(map);
+
+
+    edition = {
+
+        photo: photo,
+
+        index: index,
+
+        point: point,
+
+        triangle: triangle,
+
+        camera: cameraHandle,
+
+        gauche: gaucheHandle,
+
+        droite: droiteHandle
+
+    };
+
+
+    // ----------------------------------------------------
+    // DÉPLACEMENT DES POIGNÉES
+    // ----------------------------------------------------
+
+
+    cameraHandle.on('drag', mettreAJourEdition);
+
+    gaucheHandle.on('drag', mettreAJourEdition);
+
+    droiteHandle.on('drag', mettreAJourEdition);
+
+
+    mettreAJourEdition();
+
+
+    document.getElementById('editor').style.display =
+        'block';
+
+}
+
+
+// ========================================================
+// MISE À JOUR DU TRIANGLE
+// ========================================================
+
+
+function mettreAJourEdition() {
+
+
+    if (!edition) {
+        return;
+    }
+
+
+    const camera =
+        edition.camera.getLatLng();
+
+
+    const gauche =
+        edition.gauche.getLatLng();
+
+
+    const droite =
+        edition.droite.getLatLng();
+
+
+    // ----------------------------------------------------
+    // TRIANGLE VISUEL
+    // ----------------------------------------------------
+
+
+    edition.triangle.setLatLngs([
+
+        camera,
+
+        gauche,
+
+        droite
+
+    ]);
+
+
+    edition.point.setLatLng(camera);
+
+
+    // ----------------------------------------------------
+    // CALCUL DES AZIMUTS
+    // ----------------------------------------------------
+
+
+    const azGauche =
+        azimut(camera, gauche);
+
+
+    const azDroite =
+        azimut(camera, droite);
+
+
+    // ----------------------------------------------------
+    // CHAMP DE VISION
+    // ----------------------------------------------------
+
+
+    const champVision =
+        differenceAngles(
+
+            azGauche,
+
+            azDroite
+
+        );
+
+
+    // ----------------------------------------------------
+    // DIRECTION CENTRALE
+    // ----------------------------------------------------
+
+
+    let direction;
+
+
+    const x =
+        Math.sin(azGauche * Math.PI / 180) +
+        Math.sin(azDroite * Math.PI / 180);
+
+
+    const y =
+        Math.cos(azGauche * Math.PI / 180) +
+        Math.cos(azDroite * Math.PI / 180);
+
+
+    direction =
+        Math.atan2(x, y) *
+        180 / Math.PI;
+
+
+    direction =
+        (direction + 360) % 360;
+
+
+    // ----------------------------------------------------
+    // DISTANCES
+    // ----------------------------------------------------
+
+
+    const distanceGauche =
+        distanceEntre(camera, gauche);
+
+
+    const distanceDroite =
+        distanceEntre(camera, droite);
+
+
+    const longueur =
+        (distanceGauche + distanceDroite) / 2;
+
+
+    // ----------------------------------------------------
+    // DONNÉES CALCULÉES
+    // ----------------------------------------------------
+
+
+    edition.resultat = {
+
+        latitude:
+            camera.lat,
+
+        longitude:
+            camera.lng,
+
+        direction:
+            direction,
+
+        champVision:
+            champVision,
+
+        longueur:
+            longueur
+
+    };
+
+
+    afficherInfosEdition();
+
+}
+
+
+// ========================================================
+// PANNEAU D'INFORMATIONS
+// ========================================================
+
+
+function afficherInfosEdition() {
+
+
+    const r =
+        edition.resultat;
+
+
+    const photo =
+        edition.photo;
+
+
+    document.getElementById('editorTitle').textContent =
+
+        photo.fichier;
+
+
+    document.getElementById('editorInfo').textContent =
+
+`Latitude : ${r.latitude.toFixed(6)}
+Longitude : ${r.longitude.toFixed(6)}
+
+Direction : ${r.direction.toFixed(1)}°
+Champ de vision : ${r.champVision.toFixed(1)}°
+Distance : ${Math.round(r.longueur)} m`;
+
+
+    const code =
+
+`{
+    fichier: "${photo.fichier}",
+    latitude: ${r.latitude.toFixed(6)},
+    longitude: ${r.longitude.toFixed(6)},
+    direction: ${r.direction.toFixed(1)},
+    champVision: ${r.champVision.toFixed(1)},
+    longueur: ${Math.round(r.longueur)}
+}`;
+
+
+    document.getElementById('editorCode').value =
+        code;
+
+}
+
+
+// ========================================================
+// COPIER LE CODE
+// ========================================================
+
+
+document
+.getElementById('copyButton')
+.addEventListener('click', function() {
+
+
+    const texte =
+        document
+        .getElementById('editorCode')
+        .value;
+
+
+    navigator.clipboard.writeText(texte);
+
+
+    this.textContent =
+        'Copié !';
+
+
+    setTimeout(() => {
+
+        this.textContent =
+            'Copier le code';
+
+    }, 1200);
+
+
+});
+
+
+// ========================================================
+// FERMER L'ÉDITION
+// ========================================================
+
+
+function fermerEdition() {
+
+
+    if (!edition) {
+
+        document
+        .getElementById('editor')
+        .style.display = 'none';
+
+        return;
+
+    }
+
+
+    map.removeLayer(
+        edition.camera
+    );
+
+
+    map.removeLayer(
+        edition.gauche
+    );
+
+
+    map.removeLayer(
+        edition.droite
+    );
+
+
+    edition = null;
+
+
+    document
+    .getElementById('editor')
+    .style.display = 'none';
+
+}
+
+
+// ========================================================
+// BOUTON FERMER
+// ========================================================
+
+
+document
+.getElementById('closeEditor')
+.addEventListener(
+
+    'click',
+
+    fermerEdition
+
+);
 
 
 // ========================================================
