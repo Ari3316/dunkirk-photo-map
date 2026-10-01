@@ -247,14 +247,10 @@
 // ========================================================
 
 
-// L'adresse doit contenir ?edit
-
 const modeEdition =
     new URLSearchParams(window.location.search)
     .has('edit');
 
-
-// Affiche l'aide uniquement en mode édition
 
 if (modeEdition) {
 
@@ -284,19 +280,90 @@ const map = L.map('map', {
 
 
 // ========================================================
-// FOND SATELLITE
+// FONDS DE CARTE
 // ========================================================
 
 
-L.tileLayer(
+// --------------------------------------------------------
+// SATELLITE ACTUEL - ESRI
+// --------------------------------------------------------
 
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+
+const satelliteActuel =
+    L.tileLayer(
+
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+
+        {
+
+            maxZoom: 19,
+
+            attribution:
+                'Imagery &copy; Esri'
+
+        }
+
+    );
+
+
+// --------------------------------------------------------
+// CARTE IGN HISTORIQUE ~1950
+// Géoplateforme IGN - SCAN 50 Historique
+// --------------------------------------------------------
+
+
+const ign1950 =
+    L.tileLayer(
+
+        'https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN50.1950&format=image/jpeg&style=normal',
+
+        {
+
+            maxNativeZoom: 15,
+
+            maxZoom: 19,
+
+            attribution:
+                '&copy; IGN'
+
+        }
+
+    );
+
+
+// --------------------------------------------------------
+// FOND AFFICHÉ AU DÉMARRAGE
+// --------------------------------------------------------
+
+
+satelliteActuel.addTo(map);
+
+
+// --------------------------------------------------------
+// SÉLECTEUR DE FOND
+// --------------------------------------------------------
+
+
+const fondsDeCarte = {
+
+    "Satellite actuel": satelliteActuel,
+
+    "Carte IGN ~1950": ign1950
+
+};
+
+
+L.control.layers(
+
+    fondsDeCarte,
+
+    null,
 
     {
 
-        maxZoom: 19,
+        position: 'topright',
 
-        attribution: 'Imagery &copy; Esri'
+        collapsed: false
 
     }
 
@@ -784,7 +851,7 @@ function ouvrirEdition(
 
     // ----------------------------------------------------
     // POIGNÉE GAUCHE
-    // ----------------------------------------------------
+// ----------------------------------------------------
 
 
     const gaucheHandle =
