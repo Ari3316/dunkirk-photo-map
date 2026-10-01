@@ -1,16 +1,14 @@
-const photos = [
+{
+    fichier: "p001.jpg",
 
-    {
-        fichier: "p001.jpg",
+    latitude: 51.071572,
+    longitude: 2.475239,
 
-        latitude: 51.070716,
-        longitude: 2.475711,
+    directionGauche: 135.8,
+    distanceGauche: 452,
 
-        directionGauche: 110,
-        distanceGauche: 100,
-
-        directionDroite: 160,
-        distanceDroite: 100
-    }
+    directionDroite: 182.5,
+    distanceDroite: 441
+}
 
 ];
