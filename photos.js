@@ -1,4 +1,5 @@
 const photos = [
+
     {
         fichier: "p001.png",
         latitude: 51.070716,
@@ -6,8 +7,9 @@ const photos = [
         direction: 135,
         champVision: 50,
         longueur: 100
-    }
-     {
+    },
+
+    {
         fichier: "p002.png",
         latitude: 51.070800,
         longitude: 2.475800,
@@ -15,4 +17,5 @@ const photos = [
         champVision: 50,
         longueur: 200
     }
+
 ];
