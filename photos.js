@@ -1,133 +1,91 @@
 const photos = [
-{
-    fichier: "p011.png",
 
-    latitude: 51.034303,
-    longitude: 2.371910,
-
-    directionGauche: 171.8,
-    distanceGauche: 100,
-
-    directionDroite: 206.6,
-    distanceDroite: 99
-},{
-    fichier: "p010.png",
-
-    latitude: 51.083981,
-    longitude: 2.506299,
-
-    directionGauche: 112.9,
-    distanceGauche: 1217,
-
-    directionDroite: 165.5,
-    distanceDroite: 1093
-}, {
-    fichier: "p008.png",
-
-    latitude: 51.049778,
-    longitude: 2.389365,
-
-    directionGauche: 68.0,
-    distanceGauche: 426,
-
-    directionDroite: 83.4,
-    distanceDroite: 422
-},
     {
-    fichier: "p009.png",
+        fichier: "p011.png",
+        latitude: 51.034303,
+        longitude: 2.371910,
+        direction: 189.2,
+        angle: 30
+    },
 
-    latitude: 51.079354,
-    longitude: 2.512742,
+    {
+        fichier: "p010.png",
+        latitude: 51.083981,
+        longitude: 2.506299,
+        direction: 139.2,
+        angle: 50
+    },
 
-    directionGauche: 45.7,
-    distanceGauche: 406,
+    {
+        fichier: "p008.png",
+        latitude: 51.049778,
+        longitude: 2.389365,
+        direction: 75.7,
+        angle: 20
+    },
 
-    directionDroite: 90.3,
-    distanceDroite: 401
-},
+    {
+        fichier: "p009.png",
+        latitude: 51.079354,
+        longitude: 2.512742,
+        direction: 68.0,
+        angle: 40
+    },
+
     {
         fichier: "p001.png",
-
         latitude: 51.071572,
         longitude: 2.475239,
-
-        directionGauche: 135.8,
-        distanceGauche: 452,
-
-        directionDroite: 182.5,
-        distanceDroite: 441
+        direction: 159.2,
+        angle: 50
     },
+
     {
-    fichier: "p002.png",
+        fichier: "p002.png",
+        latitude: 51.033055,
+        longitude: 2.371652,
+        direction: 24.6,
+        angle: 60
+    },
 
-    latitude: 51.033055,
-    longitude: 2.371652,
-
-    directionGauche: 55.9,
-    distanceGauche: 56,
-
-    directionDroite: 353.2,
-    distanceDroite: 63
-},
     {
-    fichier: "p003.png",
+        fichier: "p003.png",
+        latitude: 51.044686,
+        longitude: 2.386329,
+        direction: 174.2,
+        angle: 30
+    },
 
-    latitude: 51.044686,
-    longitude: 2.386329,
-
-    directionGauche: 157.8,
-    distanceGauche: 429,
-
-    directionDroite: 190.7,
-    distanceDroite: 412
-},
     {
-    fichier: "p004.png",
+        fichier: "p004.png",
+        latitude: 51.036361,
+        longitude: 2.375692,
+        direction: 324.6,
+        angle: 60
+    },
 
-    latitude: 51.036361,
-    longitude: 2.375692,
-
-    directionGauche: 295.5,
-    distanceGauche: 265,
-
-    directionDroite: 353.7,
-    distanceDroite: 280
-},
     {
-    fichier: "p005.png",
+        fichier: "p005.png",
+        latitude: 51.034300,
+        longitude: 2.371776,
+        direction: 171.0,
+        angle: 40
+    },
 
-    latitude: 51.034300,
-    longitude: 2.371776,
-
-    directionGauche: 153.3,
-    distanceGauche: 108,
-
-    directionDroite: 188.7,
-    distanceDroite: 105
-},
     {
-    fichier: "p006.png",
+        fichier: "p006.png",
+        latitude: 51.044483,
+        longitude: 2.390181,
+        direction: 39.5,
+        angle: 70
+    },
 
-    latitude: 51.044483,
-    longitude: 2.390181,
-
-    directionGauche: 72.4,
-    distanceGauche: 32,
-
-    directionDroite: 6.6,
-    distanceDroite: 34
-},
     {
-    fichier: "p007.png",
-
-    latitude: 51.050001,
-    longitude: 2.395218,
-
-    directionGauche: 155.2,
-    distanceGauche: 195,
-
-    directionDroite: 170.7,
-    distanceDroite: 193
-}
+        fichier: "p007.png",
+        latitude: 51.050001,
+        longitude: 2.395218,
+        direction: 163.0,
+        angle: 20
+    }
 
 ];
