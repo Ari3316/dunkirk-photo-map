@@ -1,5 +1,16 @@
 const photos = [
 {
+    fichier: "p011.png",
+
+    latitude: 51.034303,
+    longitude: 2.371910,
+
+    directionGauche: 171.8,
+    distanceGauche: 100,
+
+    directionDroite: 206.6,
+    distanceDroite: 99
+},{
     fichier: "p010.png",
 
     latitude: 51.083981,
