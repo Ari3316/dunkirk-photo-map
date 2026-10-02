@@ -5,7 +5,7 @@ const photos = [
         latitude: 51.034303,
         longitude: 2.371910,
         direction: 189.2,
-        angle: 30
+        angle: 60
     },
 
     {
@@ -13,7 +13,7 @@ const photos = [
         latitude: 51.083981,
         longitude: 2.506299,
         direction: 139.2,
-        angle: 50
+        angle: 60
     },
 
     {
@@ -21,7 +21,7 @@ const photos = [
         latitude: 51.049778,
         longitude: 2.389365,
         direction: 75.7,
-        angle: 20
+        angle: 60
     },
 
     {
@@ -29,7 +29,7 @@ const photos = [
         latitude: 51.079354,
         longitude: 2.512742,
         direction: 68.0,
-        angle: 40
+        angle: 60
     },
 
     {
@@ -37,7 +37,7 @@ const photos = [
         latitude: 51.071572,
         longitude: 2.475239,
         direction: 159.2,
-        angle: 50
+        angle: 60
     },
 
     {
@@ -53,7 +53,7 @@ const photos = [
         latitude: 51.044686,
         longitude: 2.386329,
         direction: 174.2,
-        angle: 30
+        angle: 60
     },
 
     {
@@ -69,7 +69,7 @@ const photos = [
         latitude: 51.034300,
         longitude: 2.371776,
         direction: 171.0,
-        angle: 40
+        angle: 60
     },
 
     {
@@ -77,7 +77,7 @@ const photos = [
         latitude: 51.044483,
         longitude: 2.390181,
         direction: 39.5,
-        angle: 70
+        angle: 60
     },
 
     {
@@ -85,7 +85,7 @@ const photos = [
         latitude: 51.050001,
         longitude: 2.395218,
         direction: 163.0,
-        angle: 20
+        angle: 60
     }
 
 ];
