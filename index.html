@@ -1,1253 +1,265 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
     <meta charset="UTF-8">
-
     <title>Dunkerque 1940 - Carte photographique</title>
-
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
-
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-
-        html,
-        body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-
-
-        /* ==================================================
-           POPUP PHOTO
-           ================================================== */
-
-        .photo-popup {
-            margin: 0;
-            padding: 0;
-        }
-
-        .photo-popup img {
-            display: block;
-
-            width: auto;
-            height: auto;
-
-            max-width: 60vw;
-            max-height: 65vh;
-
-            object-fit: contain;
-        }
-
-        .leaflet-popup-content {
-            margin: 8px;
-            width: auto !important;
-        }
-
-        .leaflet-popup-content-wrapper {
-            padding: 0;
-        }
-
-
-        /* ==================================================
-           PANNEAU D'ÉDITION
-           ================================================== */
+        html, body { margin: 0; width: 100%; height: 100%; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100vh; }
+        .photo-popup { margin: 0; padding: 0; }
+        .photo-popup img { display: block; width: auto; height: auto; max-width: 60vw; max-height: 65vh; object-fit: contain; }
+        .leaflet-popup-content { margin: 8px; width: auto !important; }
+        .leaflet-popup-content-wrapper { padding: 0; }
 
         #editor {
-
-            position: absolute;
-
-            top: 15px;
-            right: 15px;
-
-            z-index: 1000;
-
-            width: 330px;
-
-            background: rgba(255,255,255,0.97);
-
-            border-radius: 8px;
-
-            box-shadow: 0 2px 10px rgba(0,0,0,0.30);
-
-            padding: 14px;
-
-            display: none;
+            position: absolute; top: 15px; right: 15px; z-index: 1000; width: 330px;
+            background: rgba(255,255,255,0.97); border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.30); padding: 14px; display: none;
         }
+        #editor h3 { margin: 0 0 10px 0; }
+        #editorInfo { font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre-line; }
+        #angleControls { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+        #angleControls button { flex: 1; padding: 8px; cursor: pointer; }
+        #angleValue { min-width: 55px; text-align: center; font-weight: bold; }
+        #editorCode { width: 100%; height: 170px; box-sizing: border-box; margin-top: 10px; font-family: monospace; font-size: 12px; resize: vertical; }
+        #copyButton { width: 100%; margin-top: 8px; padding: 8px; cursor: pointer; }
+        #closeEditor { float: right; cursor: pointer; font-weight: bold; }
 
-        #editor h3 {
-            margin: 0 0 10px 0;
-        }
-
-        #editorInfo {
-
-            font-family: monospace;
-
-            font-size: 13px;
-
-            line-height: 1.5;
-
-            white-space: pre-line;
-        }
-
-        #editorCode {
-
-            width: 100%;
-
-            height: 210px;
-
-            box-sizing: border-box;
-
-            margin-top: 10px;
-
-            font-family: monospace;
-
-            font-size: 12px;
-
-            resize: vertical;
-        }
-
-        #copyButton {
-
-            width: 100%;
-
-            margin-top: 8px;
-
-            padding: 8px;
-
-            cursor: pointer;
-        }
-
-        #closeEditor {
-
-            float: right;
-
-            cursor: pointer;
-
-            font-weight: bold;
-        }
-
-
-        /* ==================================================
-           POIGNÉES
-           ================================================== */
-
-        .edit-handle {
-
-            background: #ffffff;
-
-            border: 3px solid #0066ff;
-
-            border-radius: 50%;
-
-            width: 14px;
-
-            height: 14px;
-        }
-
-        .camera-handle {
-
-            background: #ff0000;
-
-            border: 3px solid #ffffff;
-
-            border-radius: 50%;
-
-            width: 16px;
-
-            height: 16px;
-        }
-
-
-        /* ==================================================
-           AIDE MODE ÉDITION
-           ================================================== */
+        .direction-handle { background: #ffffff; border: 3px solid #0066ff; border-radius: 50%; width: 14px; height: 14px; }
+        .camera-handle { background: #ff0000; border: 3px solid #ffffff; border-radius: 50%; width: 16px; height: 16px; }
 
         #help {
-
-            position: absolute;
-
-            bottom: 20px;
-            left: 20px;
-
-            z-index: 1000;
-
-            background: rgba(255,255,255,0.94);
-
-            padding: 9px 12px;
-
-            border-radius: 6px;
-
-            font-size: 13px;
-
-            box-shadow: 0 1px 6px rgba(0,0,0,0.25);
-
-            display: none;
+            position: absolute; bottom: 20px; left: 20px; z-index: 1000;
+            background: rgba(255,255,255,0.94); padding: 9px 12px; border-radius: 6px;
+            font-size: 13px; box-shadow: 0 1px 6px rgba(0,0,0,0.25); display: none;
         }
-
     </style>
-
 </head>
-
-
 <body>
-
-
 <div id="map"></div>
 
-
 <div id="editor">
-
     <span id="closeEditor">✕</span>
-
     <h3 id="editorTitle">Édition</h3>
-
     <div id="editorInfo"></div>
-
-    <textarea
-        id="editorCode"
-        readonly>
-    </textarea>
-
-    <button id="copyButton">
-        Copier le code
-    </button>
-
+    <div id="angleControls">
+        <button id="angleMoins">− 10°</button>
+        <div id="angleValue">50°</div>
+        <button id="anglePlus">+ 10°</button>
+    </div>
+    <textarea id="editorCode" readonly></textarea>
+    <button id="copyButton">Copier le code</button>
 </div>
 
+<div id="help">MODE ÉDITION — Double-clique sur un point rouge. La poignée bleue règle la direction ; l'ouverture se règle par pas de 10°.</div>
 
-<div id="help">
-    MODE ÉDITION — Double-clique sur un point rouge.
-</div>
-
-
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="photos.js"></script>
-
-
 <script>
+const modeEdition = new URLSearchParams(window.location.search).has('edit');
+if (modeEdition) document.getElementById('help').style.display = 'block';
 
+const map = L.map('map', { doubleClickZoom: !modeEdition }).setView([51.070716, 2.475711], 17);
 
-// ========================================================
-// MODE ÉDITION
-// ========================================================
-
-
-const modeEdition =
-    new URLSearchParams(window.location.search)
-    .has('edit');
-
-
-if (modeEdition) {
-
-    document
-        .getElementById('help')
-        .style.display = 'block';
-
-}
-
-
-// ========================================================
-// CARTE
-// ========================================================
-
-
-const map = L.map('map', {
-
-    doubleClickZoom: !modeEdition
-
-}).setView(
-
-    [51.070716, 2.475711],
-
-    17
-
+const satelliteActuel = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19, attribution: 'Imagery &copy; Esri' }
 );
 
-
-// ========================================================
-// FONDS DE CARTE
-// ========================================================
-
-
-// --------------------------------------------------------
-// SATELLITE ACTUEL - ESRI
-// --------------------------------------------------------
-
-
-const satelliteActuel =
-    L.tileLayer(
-
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-
-        {
-
-            maxZoom: 19,
-
-            attribution:
-                'Imagery &copy; Esri'
-
-        }
-
-    );
-
-
-// --------------------------------------------------------
-// CARTE IGN HISTORIQUE ~1950
-// Géoplateforme IGN - SCAN 50 Historique
-// --------------------------------------------------------
-
-
-const ign1950 =
-    L.tileLayer(
-
-        'https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN50.1950&format=image/jpeg&style=normal',
-
-        {
-
-            maxNativeZoom: 15,
-
-            maxZoom: 19,
-
-            attribution:
-                '&copy; IGN'
-
-        }
-
-    );
-
-
-// --------------------------------------------------------
-// FOND AFFICHÉ AU DÉMARRAGE
-// --------------------------------------------------------
-
+const ign1950 = L.tileLayer(
+    'https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN50.1950&format=image/jpeg&style=normal',
+    { maxNativeZoom: 15, maxZoom: 19, attribution: '&copy; IGN' }
+);
 
 satelliteActuel.addTo(map);
+L.control.layers({ "Satellite actuel": satelliteActuel, "Carte IGN ~1950": ign1950 }, null, { position: 'topright', collapsed: false }).addTo(map);
 
-
-// --------------------------------------------------------
-// SÉLECTEUR DE FOND
-// --------------------------------------------------------
-
-
-const fondsDeCarte = {
-
-    "Satellite actuel": satelliteActuel,
-
-    "Carte IGN ~1950": ign1950
-
-};
-
-
-L.control.layers(
-
-    fondsDeCarte,
-
-    null,
-
-    {
-
-        position: 'topright',
-
-        collapsed: false
-
-    }
-
-).addTo(map);
-
-
-// ========================================================
-// VARIABLES
-// ========================================================
-
+// Tous les triangles ont exactement cette longueur.
+const LONGUEUR_TRIANGLE = 300; // mètres
+const ANGLE_MIN = 10;
+const ANGLE_MAX = 120;
+const PAS_ANGLE = 10;
 
 let edition = null;
 
+const directionIcon = L.divIcon({ className: 'direction-handle', iconSize: [14, 14], iconAnchor: [7, 7] });
+const cameraIcon = L.divIcon({ className: 'camera-handle', iconSize: [16, 16], iconAnchor: [8, 8] });
 
-// ========================================================
-// ICÔNES DES POIGNÉES
-// ========================================================
-
-
-const editIcon = L.divIcon({
-
-    className: 'edit-handle',
-
-    iconSize: [14, 14],
-
-    iconAnchor: [7, 7]
-
-});
-
-
-const cameraIcon = L.divIcon({
-
-    className: 'camera-handle',
-
-    iconSize: [16, 16],
-
-    iconAnchor: [8, 8]
-
-});
-
-
-// ========================================================
-// CALCUL D'UN POINT
-// ========================================================
-
-
-function destinationPoint(
-
-    lat,
-    lng,
-    bearing,
-    distance
-
-) {
-
+function destinationPoint(lat, lng, bearing, distance) {
     const R = 6378137;
-
-    const bearingRad =
-        bearing * Math.PI / 180;
-
-    const latRad =
-        lat * Math.PI / 180;
-
-
-    const deltaLat =
-        (distance * Math.cos(bearingRad)) / R;
-
-
-    const deltaLng =
-        (distance * Math.sin(bearingRad)) /
-        (R * Math.cos(latRad));
-
-
-    return [
-
-        lat +
-        deltaLat * 180 / Math.PI,
-
-        lng +
-        deltaLng * 180 / Math.PI
-
-    ];
-
+    const bearingRad = bearing * Math.PI / 180;
+    const latRad = lat * Math.PI / 180;
+    const deltaLat = (distance * Math.cos(bearingRad)) / R;
+    const deltaLng = (distance * Math.sin(bearingRad)) / (R * Math.cos(latRad));
+    return [lat + deltaLat * 180 / Math.PI, lng + deltaLng * 180 / Math.PI];
 }
-
-
-// ========================================================
-// AZIMUT ENTRE DEUX POINTS
-// ========================================================
-
 
 function azimut(a, b) {
-
-    const lat1 =
-        a.lat * Math.PI / 180;
-
-    const lat2 =
-        b.lat * Math.PI / 180;
-
-    const dLng =
-        (b.lng - a.lng) *
-        Math.PI / 180;
-
-
-    const y =
-        Math.sin(dLng) *
-        Math.cos(lat2);
-
-
-    const x =
-
-        Math.cos(lat1) *
-        Math.sin(lat2)
-
-        -
-
-        Math.sin(lat1) *
-        Math.cos(lat2) *
-        Math.cos(dLng);
-
-
-    let angle =
-        Math.atan2(y, x) *
-        180 / Math.PI;
-
-
-    angle =
-        (angle + 360) % 360;
-
-
-    return angle;
-
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
-
-// ========================================================
-// DIFFÉRENCE ENTRE DEUX ANGLES
-// ========================================================
-
-
-function differenceAngles(a, b) {
-
-    let diff =
-        Math.abs(a - b);
-
-
-    if (diff > 180) {
-
-        diff =
-            360 - diff;
-
-    }
-
-
-    return diff;
-
+function normaliserAngle(angle) {
+    return Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, Math.round(angle / PAS_ANGLE) * PAS_ANGLE));
 }
 
-
-// ========================================================
-// DIRECTION CENTRALE
-// ========================================================
-
-
-function directionCentrale(a, b) {
-
-    const aRad =
-        a * Math.PI / 180;
-
-    const bRad =
-        b * Math.PI / 180;
-
-
-    const x =
-        Math.sin(aRad) +
-        Math.sin(bRad);
-
-
-    const y =
-        Math.cos(aRad) +
-        Math.cos(bRad);
-
-
-    let direction =
-        Math.atan2(x, y) *
-        180 / Math.PI;
-
-
-    direction =
-        (direction + 360) % 360;
-
-
-    return direction;
-
+function pointsTriangle(lat, lng, direction, angle) {
+    const demiAngle = angle / 2;
+    return {
+        gauche: destinationPoint(lat, lng, (direction - demiAngle + 360) % 360, LONGUEUR_TRIANGLE),
+        droite: destinationPoint(lat, lng, (direction + demiAngle) % 360, LONGUEUR_TRIANGLE)
+    };
 }
 
-
-// ========================================================
-// CRÉATION DES PHOTOS
-// ========================================================
-
+function appliquerTriangle(triangle, lat, lng, direction, angle) {
+    const bords = pointsTriangle(lat, lng, direction, angle);
+    triangle.setLatLngs([[lat, lng], bords.gauche, bords.droite]);
+}
 
 photos.forEach((photo, index) => {
+    photo.angle = normaliserAngle(photo.angle);
+    const bords = pointsTriangle(photo.latitude, photo.longitude, photo.direction, photo.angle);
 
+    const triangle = L.polygon(
+        [[photo.latitude, photo.longitude], bords.gauche, bords.droite],
+        { color: '#ff0000', weight: 2, fillColor: '#ff0000', fillOpacity: 0.20, interactive: false }
+    ).addTo(map);
 
-    // ----------------------------------------------------
-    // POINT GAUCHE
-    // ----------------------------------------------------
-
-
-    const pointGauche =
-        destinationPoint(
-
-            photo.latitude,
-
-            photo.longitude,
-
-            photo.directionGauche,
-
-            photo.distanceGauche
-
-        );
-
-
-    // ----------------------------------------------------
-    // POINT DROIT
-    // ----------------------------------------------------
-
-
-    const pointDroite =
-        destinationPoint(
-
-            photo.latitude,
-
-            photo.longitude,
-
-            photo.directionDroite,
-
-            photo.distanceDroite
-
-        );
-
-
-    // ----------------------------------------------------
-    // TRIANGLE
-    // ----------------------------------------------------
-
-
-    const triangle =
-        L.polygon(
-
-            [
-
-                [
-                    photo.latitude,
-                    photo.longitude
-                ],
-
-                pointGauche,
-
-                pointDroite
-
-            ],
-
-            {
-
-                color: '#ff0000',
-
-                weight: 2,
-
-                fillColor: '#ff0000',
-
-                fillOpacity: 0.20,
-
-                interactive: false
-
-            }
-
-        ).addTo(map);
-
-
-    // ----------------------------------------------------
-    // POINT PHOTO
-    // ----------------------------------------------------
-
-
-    const point =
-        L.circleMarker(
-
-            [
-
-                photo.latitude,
-
-                photo.longitude
-
-            ],
-
-            {
-
-                radius: 7,
-
-                color: '#ffffff',
-
-                weight: 2,
-
-                fillColor: '#ff0000',
-
-                fillOpacity: 1
-
-            }
-
-        ).addTo(map);
-
-
-    // ----------------------------------------------------
-    // PHOTO
-    // ----------------------------------------------------
-
-
-    const contenuPhoto = `
-
-        <div class="photo-popup">
-
-            <img
-                src="photos/${photo.fichier}"
-                alt=""
-            >
-
-        </div>
-
-    `;
-
+    const point = L.circleMarker(
+        [photo.latitude, photo.longitude],
+        { radius: 7, color: '#ffffff', weight: 2, fillColor: '#ff0000', fillOpacity: 1 }
+    ).addTo(map);
 
     point.bindPopup(
-
-        contenuPhoto,
-
-        {
-
-            maxWidth: 1000,
-
-            minWidth: 100,
-
-            autoPan: true,
-
-            autoPanPadding: [30,30],
-
-            closeButton: true,
-
-            className: 'photo-leaflet-popup'
-
-        }
-
+        `<div class="photo-popup"><img src="photos/${photo.fichier}" alt=""></div>`,
+        { maxWidth: 1000, minWidth: 100, autoPan: true, autoPanPadding: [30,30], closeButton: true, className: 'photo-leaflet-popup' }
     );
-
-
-    // ----------------------------------------------------
-    // ÉDITION UNIQUEMENT SI ?edit
-    // ----------------------------------------------------
-
 
     if (modeEdition) {
-
-        point.on(
-
-            'dblclick',
-
-            function(e) {
-
-
-                L.DomEvent.stopPropagation(e);
-
-
-                ouvrirEdition(
-
-                    photo,
-
-                    index,
-
-                    point,
-
-                    triangle
-
-                );
-
-            }
-
-        );
-
+        point.on('dblclick', function(e) {
+            L.DomEvent.stopPropagation(e);
+            ouvrirEdition(photo, index, point, triangle);
+        });
     }
-
-
 });
 
-
-// ========================================================
-// OUVRIR L'ÉDITION
-// ========================================================
-
-
-function ouvrirEdition(
-
-    photo,
-
-    index,
-
-    point,
-
-    triangle
-
-) {
-
-
-    if (!modeEdition) {
-        return;
-    }
-
-
+function ouvrirEdition(photo, index, point, triangle) {
+    if (!modeEdition) return;
     fermerEdition();
-
-
     point.closePopup();
 
+    const cameraLatLng = point.getLatLng();
+    const directionLatLng = L.latLng(destinationPoint(cameraLatLng.lat, cameraLatLng.lng, photo.direction, LONGUEUR_TRIANGLE));
 
-    const cameraLatLng =
-        point.getLatLng();
-
-
-    const gaucheLatLng =
-        L.latLng(
-
-            destinationPoint(
-
-                cameraLatLng.lat,
-
-                cameraLatLng.lng,
-
-                photo.directionGauche,
-
-                photo.distanceGauche
-
-            )
-
-        );
-
-
-    const droiteLatLng =
-        L.latLng(
-
-            destinationPoint(
-
-                cameraLatLng.lat,
-
-                cameraLatLng.lng,
-
-                photo.directionDroite,
-
-                photo.distanceDroite
-
-            )
-
-        );
-
-
-    // ----------------------------------------------------
-    // POIGNÉE APPAREIL
-    // ----------------------------------------------------
-
-
-    const cameraHandle =
-        L.marker(
-
-            cameraLatLng,
-
-            {
-
-                draggable: true,
-
-                icon: cameraIcon
-
-            }
-
-        ).addTo(map);
-
-
-    // ----------------------------------------------------
-    // POIGNÉE GAUCHE
-// ----------------------------------------------------
-
-
-    const gaucheHandle =
-        L.marker(
-
-            gaucheLatLng,
-
-            {
-
-                draggable: true,
-
-                icon: editIcon
-
-            }
-
-        ).addTo(map);
-
-
-    // ----------------------------------------------------
-    // POIGNÉE DROITE
-    // ----------------------------------------------------
-
-
-    const droiteHandle =
-        L.marker(
-
-            droiteLatLng,
-
-            {
-
-                draggable: true,
-
-                icon: editIcon
-
-            }
-
-        ).addTo(map);
-
+    const cameraHandle = L.marker(cameraLatLng, { draggable: true, icon: cameraIcon }).addTo(map);
+    const directionHandle = L.marker(directionLatLng, { draggable: true, icon: directionIcon }).addTo(map);
 
     edition = {
-
-        photo: photo,
-
-        index: index,
-
-        point: point,
-
-        triangle: triangle,
-
+        photo, index, point, triangle,
         camera: cameraHandle,
-
-        gauche: gaucheHandle,
-
-        droite: droiteHandle
-
+        directionHandle,
+        resultat: {
+            latitude: cameraLatLng.lat,
+            longitude: cameraLatLng.lng,
+            direction: photo.direction,
+            angle: normaliserAngle(photo.angle)
+        }
     };
 
+    cameraHandle.on('drag', function() {
+        const camera = cameraHandle.getLatLng();
+        edition.resultat.latitude = camera.lat;
+        edition.resultat.longitude = camera.lng;
+        repositionnerPoigneeDirection();
+        mettreAJourEdition();
+    });
 
-    cameraHandle.on(
-        'drag',
-        mettreAJourEdition
-    );
-
-
-    gaucheHandle.on(
-        'drag',
-        mettreAJourEdition
-    );
-
-
-    droiteHandle.on(
-        'drag',
-        mettreAJourEdition
-    );
-
+    directionHandle.on('drag', function() {
+        const camera = cameraHandle.getLatLng();
+        edition.resultat.direction = azimut(camera, directionHandle.getLatLng());
+        // La poignée revient toujours à la longueur commune de 300 m.
+        repositionnerPoigneeDirection();
+        mettreAJourEdition();
+    });
 
     mettreAJourEdition();
-
-
-    document
-        .getElementById('editor')
-        .style.display = 'block';
-
+    document.getElementById('editor').style.display = 'block';
 }
 
-
-// ========================================================
-// MISE À JOUR
-// ========================================================
-
+function repositionnerPoigneeDirection() {
+    if (!edition) return;
+    const r = edition.resultat;
+    edition.directionHandle.setLatLng(destinationPoint(r.latitude, r.longitude, r.direction, LONGUEUR_TRIANGLE));
+}
 
 function mettreAJourEdition() {
+    if (!edition) return;
+    const r = edition.resultat;
+    r.angle = normaliserAngle(r.angle);
 
-
-    if (!edition) {
-        return;
-    }
-
-
-    const camera =
-        edition.camera.getLatLng();
-
-
-    const gauche =
-        edition.gauche.getLatLng();
-
-
-    const droite =
-        edition.droite.getLatLng();
-
-
-    // ----------------------------------------------------
-    // MET À JOUR LE TRIANGLE
-    // ----------------------------------------------------
-
-
-    edition.triangle.setLatLngs([
-
-        camera,
-
-        gauche,
-
-        droite
-
-    ]);
-
-
-    edition.point.setLatLng(camera);
-
-
-    // ----------------------------------------------------
-    // DIRECTIONS
-    // ----------------------------------------------------
-
-
-    const directionGauche =
-        azimut(camera, gauche);
-
-
-    const directionDroite =
-        azimut(camera, droite);
-
-
-    // ----------------------------------------------------
-    // DISTANCES INDÉPENDANTES
-    // ----------------------------------------------------
-
-
-    const distanceGauche =
-        map.distance(
-            camera,
-            gauche
-        );
-
-
-    const distanceDroite =
-        map.distance(
-            camera,
-            droite
-        );
-
-
-    // ----------------------------------------------------
-    // INFORMATIONS SUPPLÉMENTAIRES
-    // ----------------------------------------------------
-
-
-    const champVision =
-        differenceAngles(
-
-            directionGauche,
-
-            directionDroite
-
-        );
-
-
-    const direction =
-        directionCentrale(
-
-            directionGauche,
-
-            directionDroite
-
-        );
-
-
-    edition.resultat = {
-
-        latitude:
-            camera.lat,
-
-        longitude:
-            camera.lng,
-
-        directionGauche:
-            directionGauche,
-
-        distanceGauche:
-            distanceGauche,
-
-        directionDroite:
-            directionDroite,
-
-        distanceDroite:
-            distanceDroite,
-
-        champVision:
-            champVision,
-
-        direction:
-            direction
-
-    };
-
-
+    edition.point.setLatLng([r.latitude, r.longitude]);
+    appliquerTriangle(edition.triangle, r.latitude, r.longitude, r.direction, r.angle);
     afficherInfosEdition();
-
 }
 
+function changerAngle(delta) {
+    if (!edition) return;
+    edition.resultat.angle = normaliserAngle(edition.resultat.angle + delta);
+    mettreAJourEdition();
+}
 
-// ========================================================
-// PANNEAU
-// ========================================================
-
+document.getElementById('angleMoins').addEventListener('click', () => changerAngle(-PAS_ANGLE));
+document.getElementById('anglePlus').addEventListener('click', () => changerAngle(PAS_ANGLE));
 
 function afficherInfosEdition() {
+    const r = edition.resultat;
+    const photo = edition.photo;
 
-
-    const r =
-        edition.resultat;
-
-
-    const photo =
-        edition.photo;
-
-
-    document
-        .getElementById('editorTitle')
-        .textContent =
-        photo.fichier;
-
-
-    document
-        .getElementById('editorInfo')
-        .textContent =
-
+    document.getElementById('editorTitle').textContent = photo.fichier;
+    document.getElementById('editorInfo').textContent =
 `Position du photographe
-
 Latitude : ${r.latitude.toFixed(6)}
 Longitude : ${r.longitude.toFixed(6)}
 
-Bord gauche
-Direction : ${r.directionGauche.toFixed(1)}°
-Distance : ${Math.round(r.distanceGauche)} m
+Direction centrale : ${r.direction.toFixed(1)}°
+Ouverture : ${r.angle}°
+Longueur : ${LONGUEUR_TRIANGLE} m`;
 
-Bord droit
-Direction : ${r.directionDroite.toFixed(1)}°
-Distance : ${Math.round(r.distanceDroite)} m
+    document.getElementById('angleValue').textContent = `${r.angle}°`;
 
-Champ de vision : ${r.champVision.toFixed(1)}°
-Direction centrale : ${r.direction.toFixed(1)}°`;
-
-
-    const code =
-
+    document.getElementById('editorCode').value =
 `{
     fichier: "${photo.fichier}",
-
     latitude: ${r.latitude.toFixed(6)},
     longitude: ${r.longitude.toFixed(6)},
-
-    directionGauche: ${r.directionGauche.toFixed(1)},
-    distanceGauche: ${Math.round(r.distanceGauche)},
-
-    directionDroite: ${r.directionDroite.toFixed(1)},
-    distanceDroite: ${Math.round(r.distanceDroite)}
+    direction: ${r.direction.toFixed(1)},
+    angle: ${r.angle}
 }`;
-
-
-    document
-        .getElementById('editorCode')
-        .value =
-        code;
-
 }
 
-
-// ========================================================
-// COPIER
-// ========================================================
-
-
-document
-    .getElementById('copyButton')
-    .addEventListener(
-
-        'click',
-
-        function() {
-
-
-            const texte =
-
-                document
-                    .getElementById('editorCode')
-                    .value;
-
-
-            navigator.clipboard
-                .writeText(texte);
-
-
-            this.textContent =
-                'Copié !';
-
-
-            setTimeout(() => {
-
-                this.textContent =
-                    'Copier le code';
-
-            }, 1200);
-
-        }
-
-    );
-
-
-// ========================================================
-// FERMER L'ÉDITION
-// ========================================================
-
+document.getElementById('copyButton').addEventListener('click', function() {
+    navigator.clipboard.writeText(document.getElementById('editorCode').value);
+    this.textContent = 'Copié !';
+    setTimeout(() => { this.textContent = 'Copier le code'; }, 1200);
+});
 
 function fermerEdition() {
-
-
     if (!edition) {
-
-        document
-            .getElementById('editor')
-            .style.display = 'none';
-
+        document.getElementById('editor').style.display = 'none';
         return;
     }
-
-
-    map.removeLayer(
-        edition.camera
-    );
-
-
-    map.removeLayer(
-        edition.gauche
-    );
-
-
-    map.removeLayer(
-        edition.droite
-    );
-
-
+    map.removeLayer(edition.camera);
+    map.removeLayer(edition.directionHandle);
     edition = null;
-
-
-    document
-        .getElementById('editor')
-        .style.display = 'none';
-
+    document.getElementById('editor').style.display = 'none';
 }
 
-
-// ========================================================
-// BOUTON FERMER
-// ========================================================
-
-
-document
-    .getElementById('closeEditor')
-    .addEventListener(
-
-        'click',
-
-        fermerEdition
-
-    );
-
-
-// ========================================================
-// FIN
-// ========================================================
-
-
+document.getElementById('closeEditor').addEventListener('click', fermerEdition);
 </script>
-
-
 </body>
-
 </html>
